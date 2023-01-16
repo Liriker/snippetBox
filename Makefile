@@ -1,3 +1,3 @@
 .PHONY: run
 run:
-	go run cmd/snippetBox/main.go
+	go run cmd/web/main.go

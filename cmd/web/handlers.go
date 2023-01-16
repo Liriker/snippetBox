@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -55,16 +54,4 @@ func createSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write([]byte("Форма создания заметки"))
-}
-
-func main() {
-	// Регистрируем обработчики и соответствующие url- шаблоны в маршрутизаторе
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet", showSnippet)
-	mux.HandleFunc("/snippet/create", createSnippet)
-
-	log.Println("Запуск веб-сервера на http://127.0.0.1:4000")
-	err := http.ListenAndServe(":4000", mux)
-	log.Fatal(err)
 }
