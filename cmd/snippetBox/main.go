@@ -29,6 +29,10 @@ func createSnippet(w http.ResponseWriter, r *http.Request) {
 	// Проверяем, я вляется ли запрос POST
 	// http.MethodPost является строкой и содержит POST
 	if r.Method != http.MethodPost {
+		// Header().Set() добавляет заголовок "Allow: POST"
+		// в карту http заголовков.
+		// Первый параметр -название заголовка, второй - значение
+		w.Header().Set("Allow", http.MethodPost)
 		// Если это не так, то мы отправляем код ошибки 405
 		// и тело ответа "Метод запрещён"
 		// Затем вызываем return, что бы последующий код не выполнялся
