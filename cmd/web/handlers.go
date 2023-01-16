@@ -2,22 +2,36 @@ package main
 
 import (
 	"fmt"
+	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 )
 
 // home - обработчик главной страницы
 func home(w http.ResponseWriter, r *http.Request) {
-	// Проверяется, если текущий путь URL запроса точно совпадает с шаблоном "/". Если нет, вызывается
-	// функция http.NotFound() для возвращения клиенту ошибки 404.
-	// Важно, чтобы мы завершили работу обработчика через return. Если мы забудем про "return", то обработчик
-	// продолжит работу и выведет сообщение "Привет из SnippetBox" как ни в чем не бывало.
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
 
-	w.Write([]byte("Привет из SnippetBox"))
+	// template.ParseFiles читает файл шаблона
+	// В случае возврата ошибки записываем в лог детальное сообщение ошибки с помощью http.Error()
+	// и отправляем пользователю ответ в виде 500 ошибки
+	ts, err := template.ParseFiles("./ui/html/home.page.html")
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+		return
+	}
+
+	// Execute записывает содержимое шаблона в тело HTTP ответа
+	// Последний параметр предоставлет возможностьотправки динамических данных в шаблон
+	err = ts.Execute(w, nil)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, "Internal server error", 500)
+	}
 }
 
 // showSnippet - обработчик для отображения содержимого заметки
