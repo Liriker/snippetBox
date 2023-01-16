@@ -26,6 +26,16 @@ func showSnippet(w http.ResponseWriter, r *http.Request) {
 
 // createSnippet - обработчик создания новой заметки
 func createSnippet(w http.ResponseWriter, r *http.Request) {
+	// Проверяем, я вляется ли запрос POST
+	// http.MethodPost является строкой и содержит POST
+	if r.Method != http.MethodPost {
+		// Если это не так, то мы отправляем код ошибки 405
+		// и тело ответа "Метод запрещён"
+		// Затем вызываем return, что бы последующий код не выполнялся
+		w.WriteHeader(405)
+		w.Write([]byte("GET Метод запрещён!"))
+		return
+	}
 	w.Write([]byte("Форма создания заметки"))
 }
 
