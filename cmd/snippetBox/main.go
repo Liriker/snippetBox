@@ -33,11 +33,10 @@ func createSnippet(w http.ResponseWriter, r *http.Request) {
 		// в карту http заголовков.
 		// Первый параметр -название заголовка, второй - значение
 		w.Header().Set("Allow", http.MethodPost)
-		// Если это не так, то мы отправляем код ошибки 405
-		// и тело ответа "Метод запрещён"
-		// Затем вызываем return, что бы последующий код не выполнялся
-		w.WriteHeader(405)
-		w.Write([]byte("GET Метод запрещён!"))
+
+		// http.Error() отправляет код состояния с телом ошибки
+		// Под капотом тут так же есть w.Write и w.WriteHeader
+		http.Error(w, "Метод запрещён!", 405)
 		return
 	}
 	w.Write([]byte("Форма создания заметки"))
