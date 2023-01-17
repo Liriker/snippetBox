@@ -15,11 +15,12 @@ func home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Инициализируем срез, содержащийпути к файлам.
+	// Инициализируем срез, содержащий пути к файлам.
 	// ВАЖНО home.page.html должен быть первым в срезе
 	files := []string{
 		"./ui/html/home.page.html",
 		"./ui/html/base.layout.html",
+		"./ui/html/footer.partical.html",
 	}
 
 	// template.ParseFiles читает файл шаблона
