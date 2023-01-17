@@ -15,10 +15,17 @@ func home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Инициализируем срез, содержащийпути к файлам.
+	// ВАЖНО home.page.html должен быть первым в срезе
+	files := []string{
+		"./ui/html/home.page.html",
+		"./ui/html/base.layout.html",
+	}
+
 	// template.ParseFiles читает файл шаблона
 	// В случае возврата ошибки записываем в лог детальное сообщение ошибки с помощью http.Error()
 	// и отправляем пользователю ответ в виде 500 ошибки
-	ts, err := template.ParseFiles("./ui/html/home.page.html")
+	ts, err := template.ParseFiles(files...)
 	if err != nil {
 		log.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)
@@ -26,7 +33,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Execute записывает содержимое шаблона в тело HTTP ответа
-	// Последний параметр предоставлет возможностьотправки динамических данных в шаблон
+	// Последний параметр предоставлет возможность отправки динамических данных в шаблон
 	err = ts.Execute(w, nil)
 	if err != nil {
 		log.Println(err.Error())
