@@ -1,12 +1,21 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"path/filepath"
 )
 
 func main() {
+
+	// Создаём новый флаг командной строки.
+	// Добавляем небольшую справку,объясняющую, что содержит данный флаг
+	addr := flag.String("addr", ":4000", "Сетевой адрес HTTP")
+
+	// flag.Parse() извлекает флаг из командной строки и присваивает его содержимое
+	flag.Parse()
+
 	// Регистрируем обработчики и соответствующие url- шаблоны в маршрутизаторе
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", home)
@@ -14,7 +23,7 @@ func main() {
 	mux.HandleFunc("/snippet/create", createSnippet)
 
 	// Инициалзируем FileServer. Он будет обрабатывать
-	// HTTP-запросык статическим файлам в папке "./ui/static"
+	// HTTP-запросы к статическим файлам в папке "./ui/static"
 	// Путь является относительным корневой папки проекта
 	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./static")})
 
@@ -23,8 +32,9 @@ func main() {
 	// StripPrefix убирает префикс "/static"прежде чем запрос достигнет http.fileServer
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	log.Println("Запуск веб-сервера на http://127.0.0.1:4000")
-	err := http.ListenAndServe(":4000", mux)
+	// flag.Srtring
+	log.Printf("Запуск веб-сервера на http://%s", *addr)
+	err := http.ListenAndServe(*addr, mux)
 	log.Fatal(err)
 }
 
