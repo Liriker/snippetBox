@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
@@ -15,6 +16,15 @@ func main() {
 
 	// flag.Parse() извлекает флаг из командной строки и присваивает его содержимое
 	flag.Parse()
+
+	// log.New создаёт новый логгер, в данном случае для записи информационных сообщений
+	// три параметра: место назначения записи лого, префикс
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+
+	// Создаём логер для записи сообщений об ошибках
+	// Как место для записи используем Stderr
+	// log.Lshortfile включает в лог название файла и строку с ошибкой в нём
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	// Регистрируем обработчики и соответствующие url- шаблоны в маршрутизаторе
 	mux := http.NewServeMux()
@@ -32,10 +42,16 @@ func main() {
 	// StripPrefix убирает префикс "/static"прежде чем запрос достигнет http.fileServer
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
+	srv := &http.Server{
+		Addr:     *addr,
+		ErrorLog: errorLog,
+		Handler:  mux,
+	}
+
 	// flag.Srtring
-	log.Printf("Запуск веб-сервера на http://%s", *addr)
-	err := http.ListenAndServe(*addr, mux)
-	log.Fatal(err)
+	infoLog.Printf("Запуск веб-сервера на http://%s", *addr)
+	err := srv.ListenAndServe()
+	errorLog.Fatal(err)
 }
 
 // Структура для проверки пути в http.FileSystem
