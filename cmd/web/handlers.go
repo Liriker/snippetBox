@@ -11,12 +11,12 @@ import (
 // сигнатура application опередяет home как метод, что позволяет использовать зависимости
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
-		http.NotFound(w, r)
+		app.notFound(w)
 		return
 	}
 
 	// Инициализируем срез, содержащий пути к файлам.
-	// ВАЖНО home.page.bak должен быть первым в срезе
+	// ВАЖНО home.page.html должен быть первым в срезе
 	files := []string{
 		"./ui/html/home.page.html",
 		"./ui/html/base.layout.html",
@@ -30,7 +30,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Используем логгер из структуры application вместо стандартного
 		app.errorLog.Println(err.Error())
-		http.Error(w, "Internal Server Error", 500)
+		app.serverError(w, err)
 		return
 	}
 
@@ -40,7 +40,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Так же используем логер из структры
 		app.errorLog.Println(err.Error())
-		http.Error(w, "Internal server error", 500)
+		app.serverError(w, err)
 	}
 }
 
@@ -53,7 +53,7 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	// то возвращаем 404 - Страница не найдена.
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
-		http.NotFound(w, r)
+		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
 
