@@ -3,20 +3,20 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"strconv"
 )
 
 // home - обработчик главной страницы
-func home(w http.ResponseWriter, r *http.Request) {
+// сигнатура application опередяет home как метод, что позволяет использовать зависимости
+func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
 
 	// Инициализируем срез, содержащий пути к файлам.
-	// ВАЖНО home.page.html должен быть первым в срезе
+	// ВАЖНО home.page.bak должен быть первым в срезе
 	files := []string{
 		"./ui/html/home.page.html",
 		"./ui/html/base.layout.html",
@@ -28,7 +28,8 @@ func home(w http.ResponseWriter, r *http.Request) {
 	// и отправляем пользователю ответ в виде 500 ошибки
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		log.Println(err.Error())
+		// Используем логгер из структуры application вместо стандартного
+		app.errorLog.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
@@ -37,13 +38,14 @@ func home(w http.ResponseWriter, r *http.Request) {
 	// Последний параметр предоставлет возможность отправки динамических данных в шаблон
 	err = ts.Execute(w, nil)
 	if err != nil {
-		log.Println(err.Error())
+		// Так же используем логер из структры
+		app.errorLog.Println(err.Error())
 		http.Error(w, "Internal server error", 500)
 	}
 }
 
 // showSnippet - обработчик для отображения содержимого заметки
-func showSnippet(w http.ResponseWriter, r *http.Request) {
+func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 
 	// Извлекаем значение параметра id из URL и пытаемся конвертировать строку в int
 	// используя функцию strconv.Atoi.
@@ -61,7 +63,7 @@ func showSnippet(w http.ResponseWriter, r *http.Request) {
 }
 
 // createSnippet - обработчик создания новой заметки
-func createSnippet(w http.ResponseWriter, r *http.Request) {
+func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	// Проверяем, я вляется ли запрос POST
 	// http.MethodPost является строкой и содержит POST
 	if r.Method != http.MethodPost {

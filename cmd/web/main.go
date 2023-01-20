@@ -8,6 +8,12 @@ import (
 	"path/filepath"
 )
 
+// application хранит зависимости всего приложения
+type application struct {
+	errorLog *log.Logger
+	infoLog  *log.Logger
+}
+
 func main() {
 
 	// Создаём новый флаг командной строки.
@@ -20,17 +26,21 @@ func main() {
 	// log.New создаёт новый логгер, в данном случае для записи информационных сообщений
 	// три параметра: место назначения записи лого, префикс
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-
 	// Создаём логер для записи сообщений об ошибках
 	// Как место для записи используем Stderr
 	// log.Lshortfile включает в лог название файла и строку с ошибкой в нём
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
+	app := &application{
+		errorLog: errorLog,
+		infoLog:  infoLog,
+	}
+
 	// Регистрируем обработчики и соответствующие url- шаблоны в маршрутизаторе
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet", showSnippet)
-	mux.HandleFunc("/snippet/create", createSnippet)
+	mux.HandleFunc("/", app.home)
+	mux.HandleFunc("/snippet", app.showSnippet)
+	mux.HandleFunc("/snippet/create", app.createSnippet)
 
 	// Инициалзируем FileServer. Он будет обрабатывать
 	// HTTP-запросы к статическим файлам в папке "./ui/static"
