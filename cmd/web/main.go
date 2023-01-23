@@ -1,7 +1,9 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
+	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"net/http"
 	"os"
@@ -18,12 +20,22 @@ func main() {
 	// Создаём флаг для командной строки, который указывает сетевой адрес.
 	// По умолчанию адресс :4000
 	addr := flag.String("addr", ":4000", "Сетевой адрес HTTP")
-	// Парсим адрес
+	// Создаём флаг для БД
+	dsn := flag.String("dsn", "web:admin@/snippetbox?parseTime=true", "логин:пароль@/название сточника данных")
+	// Парсим флаги
 	flag.Parse()
 
-	// Создаём логи для информайции и ошибок
+	// Создаём логи для информации и ошибок
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+	// Получаем пул соединений из dsn
+	db, err := openDB(*dsn)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+	//Откладываем закрытие пула до выхода из функции main
+	defer db.Close()
 
 	// Инициализируем структуру с зависимостями приложения
 	// Указываем в созданные логи
@@ -42,8 +54,21 @@ func main() {
 
 	// Запускаем сервер, описывая соответствующие логи
 	infoLog.Printf("Запуск веб-сервера на http://%s", *addr)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	errorLog.Fatal(err)
+}
+
+// openDB оборачивает sql.Open и возвращает пул соединений sql.DB
+// для заданной строки подключения
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, err
+	}
+	if err = db.Ping(); err != nil {
+		return nil, err
+	}
+	return db, nil
 }
 
 // Структура для проверки пути в http.FileSystem
