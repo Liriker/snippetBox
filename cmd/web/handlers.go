@@ -71,11 +71,24 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 		// в карту http заголовков.
 		// Первый параметр -название заголовка, второй - значение
 		w.Header().Set("Allow", http.MethodPost)
-
 		// http.Error() отправляет код состояния с телом ошибки
 		// Под капотом тут так же есть w.Write и w.WriteHeader
-		http.Error(w, "Метод запрещён!", 405)
+		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
-	w.Write([]byte("Форма создания заметки"))
+
+	// Временно создаём переменные для теста
+	title := "История про улитку"
+	content := "Улитка выползла из раковины,\nвытянула рожки,\nи опять подобрала их."
+	expires := "7"
+
+	// Передаём данные в Insert для создания заметки, получаем id созданной заметки
+	id, err := app.snippets.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	// Перенаправляем пользователя на соответствующую страницу заметки
+	http.Redirect(w, r, fmt.Sprintf("/snippet?id=%d", id), http.StatusSeeOther)
 }
