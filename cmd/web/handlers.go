@@ -1,47 +1,51 @@
 package main
 
 import (
+	"Liriker/snippetBox/pkg/models"
+	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 )
 
 // home - обработчик главной страницы
-// сигнатура application опередяет home как метод, что позволяет использовать зависимости
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
+	// Проверяем, что бы домашняя страница вызывалась только при URL .../
 	if r.URL.Path != "/" {
 		app.notFound(w)
 		return
 	}
 
+	s, err := app.snippets.Lastest()
+	if err != nil {
+		app.serverError(w, err)
+	}
+
+	for _, snippet := range s {
+		fmt.Fprintf(w, "%v\n", snippet)
+	}
+
 	// Инициализируем срез, содержащий пути к файлам.
-	// ВАЖНО home.page.html должен быть первым в срезе
-	files := []string{
-		"./ui/html/home.page.html",
-		"./ui/html/base.layout.html",
-		"./ui/html/footer.partical.html",
-	}
-
-	// template.ParseFiles читает файл шаблона
-	// В случае возврата ошибки записываем в лог детальное сообщение ошибки с помощью http.Error()
-	// и отправляем пользователю ответ в виде 500 ошибки
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		// Используем логгер из структуры application вместо стандартного
-		app.errorLog.Println(err.Error())
-		app.serverError(w, err)
-		return
-	}
-
-	// Execute записывает содержимое шаблона в тело HTTP ответа
-	// Последний параметр предоставлет возможность отправки динамических данных в шаблон
-	err = ts.Execute(w, nil)
-	if err != nil {
-		// Так же используем логер из структры
-		app.errorLog.Println(err.Error())
-		app.serverError(w, err)
-	}
+	//files := []string{
+	//	"./ui/html/home.page.html",
+	//	"./ui/html/base.layout.html",
+	//	"./ui/html/footer.partical.html",
+	//}
+	//
+	//// Парсим шаблоны из среза
+	//ts, err := template.ParseFiles(files...)
+	//if err != nil {
+	//	app.errorLog.Println(err.Error())
+	//	app.serverError(w, err)
+	//	return
+	//}
+	//
+	//// Записываем шаблоны в тело ответа
+	//err = ts.Execute(w, nil)
+	//if err != nil {
+	//	app.errorLog.Println(err.Error())
+	//	app.serverError(w, err)
+	//}
 }
 
 // showSnippet - обработчик для отображения содержимого заметки
@@ -56,10 +60,19 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
+	// Извлеккаем данные из записи по её ID
+	s, err := app.snippets.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
 
-	// Fprintf вставляет значение id в строку
-	// и записывает его в w - http.ResponseWriter.
-	fmt.Fprintf(w, "Отображение заметки с ID %d...", id)
+	// Отображаем весь вывод на странице
+	fmt.Fprintf(w, "%v", *s)
 }
 
 // createSnippet - обработчик создания новой заметки
