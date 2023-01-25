@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	_ "github.com/go-sql-driver/mysql"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -13,9 +14,10 @@ import (
 
 // application хранит зависимости всего приложения
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	snippets *mysql.SnippetModel
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	snippets      *mysql.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -39,12 +41,15 @@ func main() {
 	//Откладываем закрытие пула до выхода из функции main
 	defer db.Close()
 
+	templateCache, err := newTemplateCache("./ui/html/")
+
 	// Инициализируем структуру с зависимостями приложения
 	// Указываем в созданные логи
 	app := &application{
-		errorLog: errorLog,
-		infoLog:  infoLog,
-		snippets: &mysql.SnippetModel{DB: db},
+		errorLog:      errorLog,
+		infoLog:       infoLog,
+		snippets:      &mysql.SnippetModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	// Инициализируем стуктуру сервера, что бы сервер использовал

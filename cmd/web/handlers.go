@@ -4,7 +4,6 @@ import (
 	"Liriker/snippetBox/pkg/models"
 	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 )
@@ -17,34 +16,14 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Получаем данные последних 10-ти заметок
 	s, err := app.snippets.Lastest()
 	if err != nil {
 		app.serverError(w, err)
 	}
 
-	data := &templateData{Snippets: s}
-
-	//Инициализируем срез, содержащий пути к файлам.
-	files := []string{
-		"./ui/html/home.page.html",
-		"./ui/html/base.layout.html",
-		"./ui/html/footer.partical.html",
-	}
-
-	// Парсим шаблоны из среза
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.errorLog.Println(err.Error())
-		app.serverError(w, err)
-		return
-	}
-
-	// Записываем шаблоны и данные в тело ответа
-	err = ts.Execute(w, data)
-	if err != nil {
-		app.errorLog.Println(err.Error())
-		app.serverError(w, err)
-	}
+	// Отображаем шаблон страницы с данными
+	app.render(w, r, "home.page.html", &templateData{Snippets: s})
 }
 
 // showSnippet - обработчик для отображения содержимого заметки
@@ -67,40 +46,16 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := &templateData{Snippet: s}
-
-	// Инициализируем срез строк, у котором будут храниться пути к html шаблонам
-	files := []string{
-		"./ui/html/show.page.html",
-		"./ui/html/base.layout.html",
-		"./ui/html/footer.partical.html",
-	}
-
-	// Парсим шаблоны
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	// Выполняем шаблоны, в качестве динамических данных указываем заметки
-	err = ts.Execute(w, data)
-	if err != nil {
-		app.serverError(w, err)
-	}
+	// Отображаем шаблон с данными
+	app.render(w, r, "show.page.html", &templateData{Snippet: s})
 }
 
 // createSnippet - обработчик создания новой заметки
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	// Проверяем, я вляется ли запрос POST
-	// http.MethodPost является строкой и содержит POST
 	if r.Method != http.MethodPost {
-		// Header().Set() добавляет заголовок "Allow: POST"
-		// в карту http заголовков.
-		// Первый параметр -название заголовка, второй - значение
+		// Добавляем заголовок "Allow: POST" в карту http заголовков.
 		w.Header().Set("Allow", http.MethodPost)
-		// http.Error() отправляет код состояния с телом ошибки
-		// Под капотом тут так же есть w.Write и w.WriteHeader
 		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
