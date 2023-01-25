@@ -5,8 +5,10 @@ import (
 	"time"
 )
 
+// Ошибка при отсутствии искомой записи
 var ErrNoRecord = errors.New("models: подходящей записи не найдено")
 
+// Модель заметки
 type Snippet struct {
 	ID      int
 	Title   string

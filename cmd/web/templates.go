@@ -11,6 +11,7 @@ type templateData struct {
 	Snippets []*models.Snippet
 }
 
+// newTemplateCache возвращает карту шаблонов страницы
 func newTemplateCache(dir string) (map[string]*template.Template, error) {
 	// Инициализируем карту, которая будет хранить кеш
 	cache := map[string]*template.Template{}

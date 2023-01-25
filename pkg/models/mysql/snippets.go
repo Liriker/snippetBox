@@ -11,20 +11,19 @@ type SnippetModel struct {
 	DB *sql.DB
 }
 
-// Insert создаёт заметку
+// Insert создаёт заметку, возвращает её ID в int
 func (m *SnippetModel) Insert(title, content, expires string) (int, error) {
 	// Описываем SQL запрос
 	stmt := `INSERT INTO snippets (title, content, created, expires)
     VALUES(?, ?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? DAY))`
 
-	// Exec выполняет запрос и возвращает sql.Result,
-	// содержащий основные данные о том, что произошло после выполнения запроса
+	// Выполняем запрос и получаем информацию о том, что произошло при выполнении
 	result, err := m.DB.Exec(stmt, title, content, expires)
 	if err != nil {
 		return 0, err
 	}
 
-	// LastinsertId возвращает последний ID созданной записи в таблицу
+	// Получаем последний записанный ID
 	id, err := result.LastInsertId()
 	if err != nil {
 		return 0, err
@@ -34,17 +33,16 @@ func (m *SnippetModel) Insert(title, content, expires string) (int, error) {
 	return int(id), nil
 }
 
-// Get получает заметку по ID
+// Get возвращает заметку по ID
 func (m *SnippetModel) Get(id int) (*models.Snippet, error) {
 	// sql запрос
 	stmt := `SELECT id, title, content, created, expires FROM snippets
     WHERE expires > UTC_TIMESTAMP() AND id = ?`
 
-	// QueryRow выполняет запрос
-	// Возвращается указатель на объект sql.Row, содержащий данные записи
+	// Выполняем запрос и получаем данные записи
 	row := m.DB.QueryRow(stmt, id)
 
-	// Инициализируем указатль на новую структуру Snippet
+	// Инициализируем указатель на новую структуру Snippet
 	s := &models.Snippet{}
 
 	// Копируем значения из каждого поля в соответствующее поле в структуре Snippet
@@ -64,15 +62,14 @@ func (m *SnippetModel) Get(id int) (*models.Snippet, error) {
 
 }
 
-// Lastest показывает последние 10 заметок
+// Lastest возвращает последние 10 заметок
 func (m *SnippetModel) Lastest() ([]*models.Snippet, error) {
 
 	// Пишем SQL запрос
 	stmt := `SELECT id, title, content, created, expires FROM snippets
     WHERE expires > UTC_TIMESTAMP() ORDER BY created DESC LIMIT 10`
 
-	// Query() выполняет запрос, возвращает sql.Rows,
-	// содержащий результат нашего запроса
+	// Выполняем запрос и получаем результат
 	rows, err := m.DB.Query(stmt)
 	if err != nil {
 		return nil, err

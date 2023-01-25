@@ -22,7 +22,6 @@ type application struct {
 
 func main() {
 	// Создаём флаг для командной строки, который указывает сетевой адрес.
-	// По умолчанию адресс :4000
 	addr := flag.String("addr", ":4000", "Сетевой адрес HTTP")
 	// Создаём флаг для БД
 	dsn := flag.String("dsn", "web:admin@/snippetbox?parseTime=true", "логин:пароль@/название сточника данных")
@@ -44,7 +43,6 @@ func main() {
 	templateCache, err := newTemplateCache("./ui/html/")
 
 	// Инициализируем структуру с зависимостями приложения
-	// Указываем в созданные логи
 	app := &application{
 		errorLog:      errorLog,
 		infoLog:       infoLog,
@@ -52,8 +50,7 @@ func main() {
 		templateCache: templateCache,
 	}
 
-	// Инициализируем стуктуру сервера, что бы сервер использовал
-	// указанные адрес, логи, и машрутизаторы
+	// Инициализируем стуктуру сервера
 	srv := &http.Server{
 		Addr:     *addr,
 		ErrorLog: errorLog,
@@ -61,7 +58,7 @@ func main() {
 	}
 
 	// Запускаем сервер, описывая соответствующие логи
-	infoLog.Printf("Запуск веб-сервера на http://%s", *addr)
+	infoLog.Printf("Запуск веб-сервера на https://%s", *addr)
 	err = srv.ListenAndServe()
 	errorLog.Fatal(err)
 }
@@ -86,8 +83,6 @@ type neuteredFileSystem struct {
 
 // Open - метод, проверяющий наличие файла index.html в папке path
 // если файла index.html нет, то мы возвращаем 404 ошибку
-// метод Open удовлетвоярет интерфейс FileSystem,
-// что позволяет использовать тип neuteredFileSystem в http.FileServer
 func (nfs neuteredFileSystem) Open(path string) (http.File, error) {
 	// Открываем указанный путь
 	f, err := nfs.fs.Open(path)
@@ -101,7 +96,6 @@ func (nfs neuteredFileSystem) Open(path string) (http.File, error) {
 	if s.IsDir() {
 		// Если это папка, то мы проверяем существует ли "index.html" внутри данной папки
 		index := filepath.Join(path, "index.html")
-		//Если файла нет,то метод возвращает ошибку os.ErrNotExist
 		if _, err := nfs.fs.Open(index); err != nil {
 			// Закрываем файл index.html, что бы избежать утечки файлового дискриптора
 			closeErr := f.Close()
