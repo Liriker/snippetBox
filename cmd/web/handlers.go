@@ -22,31 +22,29 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 	}
 
-	for _, snippet := range s {
-		fmt.Fprintf(w, "%v\n", snippet)
+	data := &templateData{Snippets: s}
+
+	//Инициализируем срез, содержащий пути к файлам.
+	files := []string{
+		"./ui/html/home.page.html",
+		"./ui/html/base.layout.html",
+		"./ui/html/footer.partical.html",
 	}
 
-	// Инициализируем срез, содержащий пути к файлам.
-	//files := []string{
-	//	"./ui/html/home.page.html",
-	//	"./ui/html/base.layout.html",
-	//	"./ui/html/footer.partical.html",
-	//}
-	//
-	//// Парсим шаблоны из среза
-	//ts, err := template.ParseFiles(files...)
-	//if err != nil {
-	//	app.errorLog.Println(err.Error())
-	//	app.serverError(w, err)
-	//	return
-	//}
-	//
-	//// Записываем шаблоны в тело ответа
-	//err = ts.Execute(w, nil)
-	//if err != nil {
-	//	app.errorLog.Println(err.Error())
-	//	app.serverError(w, err)
-	//}
+	// Парсим шаблоны из среза
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.errorLog.Println(err.Error())
+		app.serverError(w, err)
+		return
+	}
+
+	// Записываем шаблоны и данные в тело ответа
+	err = ts.Execute(w, data)
+	if err != nil {
+		app.errorLog.Println(err.Error())
+		app.serverError(w, err)
+	}
 }
 
 // showSnippet - обработчик для отображения содержимого заметки
@@ -69,7 +67,7 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := &templateData{s}
+	data := &templateData{Snippet: s}
 
 	// Инициализируем срез строк, у котором будут храниться пути к html шаблонам
 	files := []string{
