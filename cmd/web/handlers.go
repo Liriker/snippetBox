@@ -4,6 +4,7 @@ import (
 	"Liriker/snippetBox/pkg/models"
 	"errors"
 	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
 )
@@ -51,10 +52,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 // showSnippet - обработчик для отображения содержимого заметки
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 
-	// Извлекаем значение параметра id из URL и пытаемся конвертировать строку в int
-	// используя функцию strconv.Atoi.
-	// Если конвертирование не удалось или значение меньше 1,
-	// то возвращаем 404 - Страница не найдена.
+	// Извлекаем значение параметра id из URL
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
 		app.clientError(w, http.StatusMethodNotAllowed)
@@ -71,8 +69,27 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Отображаем весь вывод на странице
-	fmt.Fprintf(w, "%v", *s)
+	data := &templateData{s}
+
+	// Инициализируем срез строк, у котором будут храниться пути к html шаблонам
+	files := []string{
+		"./ui/html/show.page.html",
+		"./ui/html/base.layout.html",
+		"./ui/html/footer.partical.html",
+	}
+
+	// Парсим шаблоны
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	// Выполняем шаблоны, в качестве динамических данных указываем заметки
+	err = ts.Execute(w, data)
+	if err != nil {
+		app.serverError(w, err)
+	}
 }
 
 // createSnippet - обработчик создания новой заметки
